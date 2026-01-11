@@ -9,8 +9,8 @@ import requests
 import json
 
 # Configuration
-GROQ_API_KEY = "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"
-OPENROUTER_API_KEY = "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"
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+OPENROUTER_API_KEY = st.secrets["OPENROUTER_API_KEY"]
 WHISPER_MODEL = "whisper-large-v3"
 SAMPLE_RATE = 16000
 
@@ -134,7 +134,9 @@ def analyze_delays(metrics):
 
 def get_ai_analysis(metrics, flags, transcript):
     """Get AI analysis of the speech patterns using OpenRouter."""
-    if not OPENROUTER_API_KEY:
+    try:
+        openrouter_key = st.secrets["OPENROUTER_API_KEY"]
+    except:
         return "AI analysis unavailable. Please add OPENROUTER_API_KEY to Streamlit secrets."
     
     prompt = f"""You are a speech pattern analyst. Analyze the following speech metrics and provide insights:
@@ -166,7 +168,7 @@ Be analytical and educational, not diagnostic. Focus on explaining what the data
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Authorization": f"Bearer {openrouter_key}",
                 "Content-Type": "application/json"
             },
             json={
