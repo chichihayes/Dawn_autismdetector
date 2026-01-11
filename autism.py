@@ -9,8 +9,6 @@ import requests
 import json
 
 # Configuration
-GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
-OPENROUTER_API_KEY = st.secrets["OPENROUTER_API_KEY"]
 WHISPER_MODEL = "whisper-large-v3"
 SAMPLE_RATE = 16000
 
@@ -29,14 +27,55 @@ st.title("Speech Pattern Analyzer")
 st.write("Upload an audio file to analyze speech patterns and timing metrics.")
 
 
+def check_secrets():
+    """Check if required API keys are configured."""
+    missing = []
+    if "GROQ_API_KEY" not in st.secrets:
+        missing.append("GROQ_API_KEY")
+    if "OPENROUTER_API_KEY" not in st.secrets:
+        missing.append("OPENROUTER_API_KEY")
+    
+    if missing:
+        st.error(f"⚠️ Missing required API keys: {', '.join(missing)}")
+        st.info("""
+        **To configure secrets:**
+        
+        1. **Local development**: Create a `.streamlit/secrets.toml` file with:
+        ```toml
+        GROQ_API_KEY = "your-groq-key-here"
+        OPENROUTER_API_KEY = "your-openrouter-key-here"
+        ```
+        
+        2. **Streamlit Cloud**: Go to your app settings → Secrets and add:
+        ```toml
+        GROQ_API_KEY = "your-groq-key-here"
+        OPENROUTER_API_KEY = "your-openrouter-key-here"
+        ```
+        
+        Get your keys from:
+        - Groq: https://console.groq.com/keys
+        - OpenRouter: https://openrouter.ai/keys
+        """)
+        return False
+    return True
+
+
 @st.cache_resource
 def get_groq_client():
-    return Groq(api_key=GROQ_API_KEY)
+    """Get Groq client with API key."""
+    try:
+        return Groq(api_key=st.secrets["GROQ_API_KEY"])
+    except Exception as e:
+        st.error(f"Failed to initialize Groq client: {str(e)}")
+        return None
 
 
 def transcribe_audio(audio_path):
     """Transcribe audio file using Groq Whisper API."""
     client = get_groq_client()
+    if not client:
+        return None
+    
     try:
         with open(audio_path, 'rb') as audio_file:
             transcription = client.audio.transcriptions.create(
@@ -189,6 +228,10 @@ Be analytical and educational, not diagnostic. Focus on explaining what the data
         return f"Error: {str(e)}"
 
 
+# Check for API keys before showing the main interface
+if not check_secrets():
+    st.stop()
+
 # Main App
 uploaded_file = st.file_uploader(
     "Upload Audio File",
@@ -269,4 +312,4 @@ if uploaded_file is not None:
             os.remove(tmp_path)
 
 st.markdown("---")
-st.caption("DISCLAIMER: This is a screening tool only. Professional evaluation required for diagnosis.")
+st.caption("⚠️ This tool is for educational purposes only and not a diagnostic tool. Consult healthcare professionals for clinical assessment.")
