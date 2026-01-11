@@ -166,15 +166,17 @@ Be analytical and educational, not diagnostic. Focus on explaining what the data
 
     try:
         response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
+            url="https://openrouter.ai/api/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {openrouter_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://github.com/yourusername/speech-analyzer",
+                "X-Title": "Speech Pattern Analyzer"
             },
-            json={
+            data=json.dumps({
                 "model": "deepseek/deepseek-r1-0528:free",
                 "messages": [{"role": "user", "content": prompt}]
-            }
+            })
         )
         
         if response.status_code == 200:
