@@ -1,7 +1,0 @@
-streamlit
-transformers
-torch
-numpy
-librosa
-soundfile
-accelerate
